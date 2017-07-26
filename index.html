@@ -436,12 +436,13 @@ You can see the <a href="http://editor.swagger.io/?url=https://raw.githubusercon
 <pre class="highlight json"><code><span class="p">{</span><span class="w">
   </span><span class="nt">"cards"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
     </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"summary"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Success Card"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"indicator"</span><span class="p">:</span><span class="w"> </span><span class="s2">"success"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"detail"</span><span class="p">:</span><span class="w"> </span><span class="s2">"This is an example success card."</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"summary"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Example Card"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"indicator"</span><span class="p">:</span><span class="w"> </span><span class="s2">"info"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"detail"</span><span class="p">:</span><span class="w"> </span><span class="s2">"This is an example card."</span><span class="p">,</span><span class="w">
       </span><span class="nt">"source"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nt">"label"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Static CDS Service Example"</span><span class="p">,</span><span class="w">
-        </span><span class="nt">"url"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://example.com"</span><span class="w">
+        </span><span class="nt">"url"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://example.com"</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"icon"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://example.com/img/icon-100px.png"</span><span class="w">
       </span><span class="p">},</span><span class="w">
       </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
         </span><span class="p">{</span><span class="w">
@@ -462,8 +463,8 @@ You can see the <a href="http://editor.swagger.io/?url=https://raw.githubusercon
       </span><span class="p">]</span><span class="w">
     </span><span class="p">},</span><span class="w">
     </span><span class="p">{</span><span class="w">
-      </span><span class="nt">"summary"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Info card"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"indicator"</span><span class="p">:</span><span class="w"> </span><span class="s2">"info"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"summary"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Another card"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"indicator"</span><span class="p">:</span><span class="w"> </span><span class="s2">"warning"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"source"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nt">"label"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Static CDS Service Example"</span><span class="w">
       </span><span class="p">}</span><span class="w">
@@ -504,11 +505,11 @@ You can see the <a href="http://editor.swagger.io/?url=https://raw.githubusercon
 </tr>
 <tr>
 <td><code class="prettyprint">detail</code></td>
-<td><em>string</em>.  optional detailed information to display, represented in Markdown. (For non-urgent cards, the EHR may hide these details until the user clicks a link like &ldquo;view more details&hellip;&rdquo;.)</td>
+<td><em>string</em>.  optional detailed information to display, represented in <a href="https://github.github.com/gfm/">(GitHub Flavored) Markdown</a>. (For non-urgent cards, the EHR may hide these details until the user clicks a link like &ldquo;view more details&hellip;&rdquo;.)</td>
 </tr>
 <tr>
 <td><code class="prettyprint">indicator</code></td>
-<td><em>string</em>.  urgency/importance of what this card conveys. Allowed values, in order of increasing urgency, are: <code class="prettyprint">success</code>, <code class="prettyprint">info</code>, <code class="prettyprint">warning</code>, <code class="prettyprint">hard-stop</code>. The EHR can use this field to help make UI display decisions such as sort order or coloring. The value <code class="prettyprint">hard-stop</code> indicates that the workflow should not be allowed to proceed.</td>
+<td><em>string</em>.  urgency/importance of what this card conveys. Allowed values, in order of increasing urgency, are: <code class="prettyprint">info</code>, <code class="prettyprint">warning</code>, <code class="prettyprint">hard-stop</code>. The EHR can use this field to help make UI display decisions such as sort order or coloring. The value <code class="prettyprint">hard-stop</code> indicates that the workflow should not be allowed to proceed.</td>
 </tr>
 <tr>
 <td><code class="prettyprint">source</code></td>
@@ -540,9 +541,13 @@ You can see the <a href="http://editor.swagger.io/?url=https://raw.githubusercon
 <td><code class="prettyprint">url</code></td>
 <td><em>URL</em>. An optional absolute URL to load (via <code class="prettyprint">GET</code>, in a browser context) when a user clicks on this link to learn more about the organization or data set that provided the information on this card. Note that this URL should not be used to supply a context-specific &ldquo;drill-down&rdquo; view of the information on this card. For that, use <code class="prettyprint">link.url</code> instead.</td>
 </tr>
+<tr>
+<td><code class="prettyprint">icon</code></td>
+<td><em>URL</em>. An optional absolute URL to an icon for the source of this card. The icon returned by this URL should be in PNG format, an image size of 100x100 pixels, and must not include any transparent regions.</td>
+</tr>
 </tbody></table>
 
-<p>Each <strong>Suggestion</strong> is described by the following attributes.</p>
+<p>Each <strong>Suggestion</strong> is described by the following attributes. </p>
 
 <table><thead>
 <tr>
@@ -559,12 +564,30 @@ You can see the <a href="http://editor.swagger.io/?url=https://raw.githubusercon
 <td><em>string</em>. unique identifier for this suggestion. For details see <a href="#analytics">Suggestion Tracking Analytics</a></td>
 </tr>
 <tr>
-<td><nobr><code class="prettyprint">create</code></nobr></td>
-<td><em>string</em>. new resource(s) that this suggestion applies within the current activity (e.g. for <code class="prettyprint">medication-prescribe</code>, this holds the updated prescription as proposed by the suggestion).</td>
+<td><code class="prettyprint">actions</code></td>
+<td><em>array</em>. array of objects, each defining a suggested action. Within a suggestion, all actions are logically AND&rsquo;d together, such that a user selecting a suggestion selects all of the actions within it. Note that suggestions are implicitly OR&rsquo;d.</td>
+</tr>
+</tbody></table>
+
+<p>Each <strong>Action</strong> is described by the following attributes.</p>
+
+<table><thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><code class="prettyprint">type</code></td>
+<td><em>string</em>. action&rsquo;s crud type. Allowed values are: <code class="prettyprint">create</code>, <code class="prettyprint">update</code>, <code class="prettyprint">delete</code>.</td>
 </tr>
 <tr>
-<td><code class="prettyprint">delete</code></td>
-<td><em>string</em>. id(s) of any resources to remove from the current activity (e.g. for the <code class="prettyprint">order-review</code> activity, this would provide a way to remove orders from the pending list). In activities like <code class="prettyprint">medication-prescribe</code> where only one &ldquo;content&rdquo; resource is ever relevant, this field may be omitted.</td>
+<td><code class="prettyprint">description</code></td>
+<td><em>string</em>. human-readable description of the suggested action. May be presented to the end-user.</td>
+</tr>
+<tr>
+<td><code class="prettyprint">resource</code></td>
+<td><em>object</em>. depending upon the <code class="prettyprint">type</code> attribute, new resource(s) or id(s) of resources. For a type of <code class="prettyprint">create</code>, the <code class="prettyprint">resource</code> attribute contains new FHIR resources to apply within the current activity (e.g. for <code class="prettyprint">medication-prescribe</code>, this holds the updated prescription as proposed by the suggestion).  For <code class="prettyprint">delete</code>, id(s) of any resources to remove from the current activity (e.g. for the <code class="prettyprint">order-review</code> activity, this would provide a way to remove orders from the pending list). In activities like <code class="prettyprint">medication-prescribe</code> where only one &ldquo;content&rdquo; resource is ever relevant, this field may be omitted. For <code class="prettyprint">update</code>, existing resources to modify from the current activity (e.g. for the <code class="prettyprint">order-review</code> activity, this would provide a way to annotate an order from the pending list with an assessment). This field may be omitted.</td>
 </tr>
 </tbody></table>
 
@@ -608,6 +631,18 @@ You can see the <a href="http://editor.swagger.io/?url=https://raw.githubusercon
 </tr>
 </tbody></table>
 
+<h3 id="no-decision-support">No Decision Support</h3>
+
+<blockquote>
+<p>Response when no decision support is necessary for the user</p>
+</blockquote>
+<pre class="highlight json"><code><span class="p">{</span><span class="w">
+  </span><span class="nt">"cards"</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+
+<p>If your CDS Service has no decision support for the user, your service should return a 200 HTTP response with an empty array of cards.</p>
+
 <h1 id="analytics">Analytics</h1>
 
 <p>Whenever a user clicks a button from a &ldquo;suggestion&rdquo; card, the EHR uses the
@@ -650,7 +685,7 @@ relevant data, where the following variables are defined:</p>
 </tr>
 </tbody></table>
 
-<p>Before calling the CDS Service, the EHR will fill out this template, replacing
+<p>Before calling the CDS Service, the EHR may fill out this template, replacing
 <code class="prettyprint">{{Patient.id}}</code> with the id of the current patient (e.g. <code class="prettyprint">123</code>) inside of any
 URL strings. The EHR then executes the requests in the template as a set of
 FHIR <code class="prettyprint">read</code> and <code class="prettyprint">search</code> operations (exactly as though they had been submitted
@@ -658,7 +693,9 @@ to the server&rsquo;s &ldquo;transaction&rdquo; endpoint as a FHIR batch-type bu
 
 <p>The resulting response, which must be rendered in a single page — no &ldquo;next
 page&rdquo; links allowed — is passed along to the CDS Service using the
-<code class="prettyprint">prefetch</code> parameter (see below for a complete example).</p>
+<code class="prettyprint">prefetch</code> parameter (see below for a complete example). </p>
+
+<p>When the EHR can&rsquo;t prefetch one or all of the requested resources, the CDS service won&rsquo;t receive all of the requested prefetch templates and may query the FHIR server for the missing information.</p>
 
 <h2 id="example-prefetch-request">Example prefetch request</h2>
 <pre class="highlight json"><code><span class="p">{</span><span class="w">
@@ -723,6 +760,54 @@ keys match the request keys (<code class="prettyprint">p</code> and <code class=
 <p>Note that a missing key indicates that an EHR has not attempted to supply a
 given prefetch value; the CDS service can issue the request manually at call
 time to fetch the required data.&ldquo;</p>
+
+<h2 id="prefetch-query-restrictions">Prefetch query restrictions</h2>
+
+<p>To reduce the implementation burden on EHRs that support CDS services, CDS Hooks requires that prefetch queries only use a subset of the full functionality available in the FHIR specification. Valid prefetch URLs are only allowed to contain:</p>
+
+<ul>
+<li><em>instance</em> level read interactions (for the <code class="prettyprint">Patient</code> resource only)</li>
+<li><em>type</em> level search interactions (using <code class="prettyprint">GET</code>)</li>
+<li>Patient references (e.g. <code class="prettyprint">patient={{Patient}}</code>)</li>
+<li><em>token</em> search parameters using equality (e.g. <code class="prettyprint">code=4548-4</code>) and optionally the <code class="prettyprint">:in</code> modifier (no other modifiers for token parameters are allowed)</li>
+<li><em>date</em> search parameters on <code class="prettyprint">date</code>, <code class="prettyprint">dateTime</code>, <code class="prettyprint">instant</code>, or <code class="prettyprint">Period</code> types only, and using only the prefixes <code class="prettyprint">eq</code>, <code class="prettyprint">lt</code>, <code class="prettyprint">gt</code>, <code class="prettyprint">ge</code>, <code class="prettyprint">le</code></li>
+<li>the <code class="prettyprint">_count</code> parameter to limit the number of results returned</li>
+<li>the <code class="prettyprint">_sort</code> parameter to allow for <em>most recent</em> and <em>first</em> queries</li>
+</ul>
+
+          <h1 id="security">Security</h1>
+
+<h2 id="cross-origin-resource-sharing">Cross-Origin Resource Sharing</h2>
+
+<p><a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS">Cross-origin resource sharing (CORS)</a> is web security mechanism that is built into browsers. In short, CORS allows servers to control how browsers access resources on the server, including the accessible HTTP response headers. CORS is only honored by web browsers and as such, is a client-side security mechanism.</p>
+
+<p>For CDS Services, implementing CORS is required if your CDS Service is to be called from a web browser. As the <a href="http://sandbox.cds-hooks.org">CDS Hooks Sandbox</a> is a browser application, you must implement CORS to test your CDS Service in the CDS Hooks Sandbox.</p>
+
+<p>You should carefully consider how you support CORS, but a quick starting point for testing would be to ensure your CDS Service returns the following HTTP headers:</p>
+
+<table><thead>
+<tr>
+<th>Header</th>
+<th>Value</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>Access-Control-Allow-Credentials</td>
+<td>true</td>
+</tr>
+<tr>
+<td>Access-Control-Allow-Methods</td>
+<td>GET, POST, OPTIONS</td>
+</tr>
+<tr>
+<td>Access-Control-Allow-Origin</td>
+<td>*</td>
+</tr>
+<tr>
+<td>Access-Control-Expose-Headers</td>
+<td>Origin, Accept, Content-Location, Location, X-Requested-With</td>
+</tr>
+</tbody></table>
 
           <h1 id="hook-catalog">Hook Catalog</h1>
 
@@ -812,6 +897,212 @@ feedback about this patient.</p>
 <li><strong><a href="https://github.com/cds-hooks/cds-hooks/labels/help%20wanted">help-wanted issues</a></strong></li>
 <li><strong><a href="https://github.com/cds-hooks/cds-hooks/milestones">Proposed Milestones</a></strong></li>
 </ul>
+
+          <h1 id="examples">Examples</h1>
+
+<h2 id="cdc-guideline-for-prescribing-opioids-for-chronic-pain">CDC Guideline for Prescribing Opioids for Chronic Pain</h2>
+
+<p>This example illustrates the use of the CDS Hooks <code class="prettyprint">medication-prescribe</code> hook to implement Recommendation #5 from the <a href="https://guidelines.gov/summaries/summary/50153/cdc-guideline-for-prescribing-opioids-for-chronic-pain---united-states-2016#420">CDC guideline for prescribing opioids for chronic pain</a>.</p>
+
+<p>This example is taken from the <a href="http://build.fhir.org/ig/cqframework/opioid-cds/">Opioid Prescribing Support Implementation Guide</a>, developed in partnership with the Centers for Disease Control and Prevention <a href="https://www.cdc.gov/">(CDC)</a>.</p>
+
+<p>The example illustrates a prescription for Acetaminophen/Hydrocodone Bitartrate for a patient that already has a prescription for Oxycodone Hydrochloride:</p>
+<pre class="highlight json"><code><span class="p">{</span><span class="w">
+  </span><span class="nt">"hookInstance"</span><span class="p">:</span><span class="w"> </span><span class="s2">"d1577c69-dfbe-44ad-ba6d-3e05e953b2ea"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"fhirServer"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http://fhirtest.uhn.ca/baseDstu2"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"hook"</span><span class="p">:</span><span class="w"> </span><span class="s2">"medication-prescribe"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"user"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Practitioner/example"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"context"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"resourceType"</span><span class="p">:</span><span class="w"> </span><span class="s2">"MedicationOrder"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"medrx001"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"dateWritten"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2017-05-05"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"draft"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"patient"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"reference"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Patient/example"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"medicationCodeableConcept"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"coding"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+          </span><span class="p">{</span><span class="w">
+            </span><span class="nt">"system"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http://www.nlm.nih.gov/research/umls/rxnorm"</span><span class="p">,</span><span class="w">
+            </span><span class="nt">"code"</span><span class="p">:</span><span class="w"> </span><span class="s2">"857001"</span><span class="p">,</span><span class="w">
+            </span><span class="nt">"display"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Acetaminophen 325 MG / Hydrocodone Bitartrate 10 MG Oral Tablet"</span><span class="w">
+          </span><span class="p">}</span><span class="w">
+        </span><span class="p">]</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"dosageInstruction"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+        </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"text"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Take 1 tablet Oral every 4 hours as needed"</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"timing"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nt">"repeat"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+              </span><span class="nt">"frequency"</span><span class="p">:</span><span class="w"> </span><span class="mi">6</span><span class="p">,</span><span class="w">
+              </span><span class="nt">"frequencyMax"</span><span class="p">:</span><span class="w"> </span><span class="mi">6</span><span class="p">,</span><span class="w">
+              </span><span class="nt">"period"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+              </span><span class="nt">"unit"</span><span class="p">:</span><span class="w"> </span><span class="s2">"d"</span><span class="w">
+            </span><span class="p">}</span><span class="w">
+          </span><span class="p">},</span><span class="w">
+          </span><span class="nt">"asNeededBoolean"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"doseQuantity"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span><span class="w">
+            </span><span class="nt">"unit"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mg"</span><span class="p">,</span><span class="w">
+            </span><span class="nt">"system"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http://unitsofmeasure.org"</span><span class="p">,</span><span class="w">
+            </span><span class="nt">"code"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mg"</span><span class="w">
+          </span><span class="p">}</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+      </span><span class="p">]</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">],</span><span class="w">
+  </span><span class="nt">"patient"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Patient/Patient-12214"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"prefetch"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"medication"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"response"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"200 OK"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"resource"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"resourceType"</span><span class="p">:</span><span class="w"> </span><span class="s2">"MedicationOrder"</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"medrx002"</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"dateWritten"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2017-04-25"</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"active"</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"patient"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"reference"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Patient/Patient-12214"</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="nt">"medicationCodeableConcept"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"coding"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+            </span><span class="p">{</span><span class="w">
+              </span><span class="nt">"system"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http://www.nlm.nih.gov/research/umls/rxnorm"</span><span class="p">,</span><span class="w">
+              </span><span class="nt">"code"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1049621"</span><span class="p">,</span><span class="w">
+              </span><span class="nt">"display"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Oxycodone Hydrochloride 5 MG Oral Tablet"</span><span class="w">
+            </span><span class="p">}</span><span class="w">
+          </span><span class="p">]</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="nt">"dosageInstruction"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+          </span><span class="p">{</span><span class="w">
+            </span><span class="nt">"text"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Take 1 tablet by mouth every 4 hours as needed for pain."</span><span class="p">,</span><span class="w">
+            </span><span class="nt">"timing"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+              </span><span class="nt">"repeat"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+                </span><span class="nt">"frequency"</span><span class="p">:</span><span class="w"> </span><span class="mi">6</span><span class="p">,</span><span class="w">
+                </span><span class="nt">"period"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+                </span><span class="nt">"periodUnits"</span><span class="p">:</span><span class="w"> </span><span class="s2">"d"</span><span class="w">
+              </span><span class="p">}</span><span class="w">
+            </span><span class="p">},</span><span class="w">
+            </span><span class="nt">"asNeededBoolean"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+            </span><span class="nt">"doseQuantity"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+              </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w">
+              </span><span class="nt">"unit"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mg"</span><span class="p">,</span><span class="w">
+              </span><span class="nt">"system"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http://unitsofmeasure.org"</span><span class="p">,</span><span class="w">
+              </span><span class="nt">"code"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mg"</span><span class="w">
+            </span><span class="p">}</span><span class="w">
+          </span><span class="p">}</span><span class="w">
+        </span><span class="p">]</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+
+<p>This request results in the following response:</p>
+<pre class="highlight json"><code><span class="p">{</span><span class="w">
+  </span><span class="nt">"summary"</span><span class="p">:</span><span class="w"> </span><span class="s2">"High risk for opioid overdose - taper now"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"indicator"</span><span class="p">:</span><span class="w"> </span><span class="s2">"warning"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"label"</span><span class="p">:</span><span class="w"> </span><span class="s2">"CDC guideline for prescribing opioids for chronic pain"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"absolute"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"url"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://guidelines.gov/summaries/summary/50153/cdc-guideline-for-prescribing-opioids-for-chronic-pain---united-states-2016#420"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"label"</span><span class="p">:</span><span class="w"> </span><span class="s2">"MME Conversion Tables"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"absolute"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"url"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://www.cdc.gov/drugoverdose/pdf/calculating_total_daily_dose-a.pdf"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">],</span><span class="w">
+  </span><span class="nt">"detail"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Total morphine milligram equivalent (MME) is 125mg. Taper to less than 50."</span><span class="w">
+</span><span class="p">}</span><span class="err">```</span><span class="w">
+
+</span><span class="err">##</span><span class="w"> </span><span class="err">Radiology</span><span class="w"> </span><span class="err">Appropriateness</span><span class="w">
+
+</span><span class="err">This</span><span class="w"> </span><span class="err">example</span><span class="w"> </span><span class="err">illustrates</span><span class="w"> </span><span class="err">the</span><span class="w"> </span><span class="err">use</span><span class="w"> </span><span class="err">of</span><span class="w"> </span><span class="err">the</span><span class="w"> </span><span class="err">CDS</span><span class="w"> </span><span class="err">Hooks</span><span class="w"> </span><span class="err">`order-review`</span><span class="w"> </span><span class="err">hook</span><span class="w"> </span><span class="err">to</span><span class="w"> </span><span class="err">implement</span><span class="w"> </span><span class="err">Radiology</span><span class="w"> </span><span class="err">Appropriateness</span><span class="w"> </span><span class="err">scoring.</span><span class="w">
+
+</span><span class="err">```json</span><span class="w">
+</span><span class="p">{</span><span class="w">
+  </span><span class="nt">"hookInstance"</span><span class="p">:</span><span class="w"> </span><span class="s2">"d1577c69-dfbe-44ad-ba6d-3e05e953b2ea"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"fhirServer"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http://fhirtest.uhn.ca/baseDstu2"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"hook"</span><span class="p">:</span><span class="w"> </span><span class="s2">"medication-prescribe"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"user"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Practitioner/example"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"context"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"resourceType"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ProcedureRequest"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"procedure-request-1"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"draft"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"intent"</span><span class="p">:</span><span class="w"> </span><span class="s2">"proposal"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"priority"</span><span class="p">:</span><span class="w"> </span><span class="s2">"routine"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"code"</span><span class="p">:</span><span class="w">
+        </span><span class="s2">"coding"</span><span class="err">:</span><span class="w"> </span><span class="p">[{</span><span class="w">
+          </span><span class="nt">"system"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http://www.ama-assn.org/go/cpt"</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"code"</span><span class="p">:</span><span class="w"> </span><span class="s2">"70450"</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"display"</span><span class="p">:</span><span class="w"> </span><span class="s2">"CT, head, wo iv contrast"</span><span class="w">
+        </span><span class="p">}],</span><span class="w">
+      </span><span class="nt">"subject"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"reference"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Patient/example"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"requester"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"agent"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"reference"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Practitioner/exampmle"</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">],</span><span class="w">
+  </span><span class="nt">"patient"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Patient/example"</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+
+<p>The appropriateness score is communicated via an update of the procedure request:</p>
+<pre class="highlight json"><code><span class="p">{</span><span class="w">
+  </span><span class="nt">"cards"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"summary"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Usually appropriate"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"indicator"</span><span class="p">:</span><span class="w"> </span><span class="s2">"info"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"detail"</span><span class="p">:</span><span class="w"> </span><span class="s2">"The requested procedure is usually appropriate for the given indications."</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"suggestions"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+        </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"label"</span><span class="p">:</span><span class="w"> </span><span class="s2">"The appropriateness score for this procedure given these indications is 9, usually appropriate."</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"actions"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+            </span><span class="s2">"type"</span><span class="err">:</span><span class="w"> </span><span class="s2">"update"</span><span class="p">,</span><span class="w">
+            </span><span class="s2">"description"</span><span class="err">:</span><span class="w"> </span><span class="s2">"Update the order to record the appropriateness score."</span><span class="p">,</span><span class="w">
+            </span><span class="s2">"resource"</span><span class="err">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+              </span><span class="nt">"resourceType"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ProcedureRequest"</span><span class="p">,</span><span class="w">
+              </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"procedure-request-1"</span><span class="p">,</span><span class="w">
+              </span><span class="nt">"extension"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+                </span><span class="p">{</span><span class="w">
+                  </span><span class="nt">"url"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http://hl7.org/fhir/us/qicore/StructureDefinition/procedurerequest-appropriatenessScore"</span><span class="p">,</span><span class="w">
+                  </span><span class="nt">"valueDecimal"</span><span class="p">:</span><span class="w"> </span><span class="s2">"9"</span><span class="w">
+                </span><span class="p">}</span><span class="w">
+              </span><span class="p">],</span><span class="w">
+              </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"draft"</span><span class="p">,</span><span class="w">
+              </span><span class="nt">"intent"</span><span class="p">:</span><span class="w"> </span><span class="s2">"proposal"</span><span class="p">,</span><span class="w">
+              </span><span class="nt">"priority"</span><span class="p">:</span><span class="w"> </span><span class="s2">"routine"</span><span class="p">,</span><span class="w">
+              </span><span class="nt">"code"</span><span class="p">:</span><span class="w">
+                </span><span class="s2">"coding"</span><span class="err">:</span><span class="w"> </span><span class="p">[{</span><span class="w">
+                  </span><span class="nt">"system"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http://www.ama-assn.org/go/cpt"</span><span class="p">,</span><span class="w">
+                  </span><span class="nt">"code"</span><span class="p">:</span><span class="w"> </span><span class="s2">"70450"</span><span class="p">,</span><span class="w">
+                  </span><span class="nt">"display"</span><span class="p">:</span><span class="w"> </span><span class="s2">"CT, head, wo iv contrast"</span><span class="w">
+                </span><span class="p">}],</span><span class="w">
+              </span><span class="nt">"subject"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+                </span><span class="nt">"reference"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Patient/example"</span><span class="w">
+              </span><span class="p">},</span><span class="w">
+              </span><span class="nt">"requester"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+                </span><span class="nt">"agent"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+                  </span><span class="nt">"reference"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Practitioner/exampmle"</span><span class="w">
+                </span><span class="p">}</span><span class="w">
+              </span><span class="p">}</span><span class="w">
+            </span><span class="p">}</span><span class="w">
+          </span><span class="p">]</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+      </span><span class="p">]</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">]</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
 
       </div>
       <div class="dark-box">
