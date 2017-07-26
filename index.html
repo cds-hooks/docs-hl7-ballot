@@ -1,0 +1,824 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta content="IE=edge,chrome=1" http-equiv="X-UA-Compatible">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>API Reference</title>
+
+    <style>
+      .highlight table td { padding: 5px; }
+.highlight table pre { margin: 0; }
+.highlight, .highlight .w {
+  color: #f8f8f2;
+  background-color: #272822;
+}
+.highlight .err {
+  color: #151515;
+  background-color: #ac4142;
+}
+.highlight .c, .highlight .cd, .highlight .cm, .highlight .c1, .highlight .cs {
+  color: #505050;
+}
+.highlight .cp {
+  color: #f4bf75;
+}
+.highlight .nt {
+  color: #f4bf75;
+}
+.highlight .o, .highlight .ow {
+  color: #d0d0d0;
+}
+.highlight .p, .highlight .pi {
+  color: #d0d0d0;
+}
+.highlight .gi {
+  color: #90a959;
+}
+.highlight .gd {
+  color: #ac4142;
+}
+.highlight .gh {
+  color: #6a9fb5;
+  background-color: #151515;
+  font-weight: bold;
+}
+.highlight .k, .highlight .kn, .highlight .kp, .highlight .kr, .highlight .kv {
+  color: #aa759f;
+}
+.highlight .kc {
+  color: #d28445;
+}
+.highlight .kt {
+  color: #d28445;
+}
+.highlight .kd {
+  color: #d28445;
+}
+.highlight .s, .highlight .sb, .highlight .sc, .highlight .sd, .highlight .s2, .highlight .sh, .highlight .sx, .highlight .s1 {
+  color: #90a959;
+}
+.highlight .sr {
+  color: #75b5aa;
+}
+.highlight .si {
+  color: #8f5536;
+}
+.highlight .se {
+  color: #8f5536;
+}
+.highlight .nn {
+  color: #f4bf75;
+}
+.highlight .nc {
+  color: #f4bf75;
+}
+.highlight .no {
+  color: #f4bf75;
+}
+.highlight .na {
+  color: #6a9fb5;
+}
+.highlight .m, .highlight .mf, .highlight .mh, .highlight .mi, .highlight .il, .highlight .mo, .highlight .mb, .highlight .mx {
+  color: #90a959;
+}
+.highlight .ss {
+  color: #90a959;
+}
+    </style>
+    <link href="stylesheets/screen.css" rel="stylesheet" media="screen" />
+    <link href="stylesheets/print.css" rel="stylesheet" media="print" />
+      <script src="javascripts/all.js"></script>
+  </head>
+
+  <body class="index" data-languages="[&quot;code&quot;]">
+    <a href="#" id="nav-button">
+      <span>
+        NAV
+        <img src="images/navbar.png" />
+      </span>
+    </a>
+    <div class="tocify-wrapper">
+      <img src="images/logo.png" />
+        <div class="lang-selector">
+              <a href="#" data-language-name="code">code</a>
+        </div>
+        <div class="search">
+          <input type="text" class="search" id="input-search" placeholder="Search">
+        </div>
+        <ul class="search-results"></ul>
+      <div id="toc">
+      </div>
+        <ul class="toc-footer">
+            <li><a href='https://github.com/tripit/slate'>Documentation Powered by Slate</a></li>
+        </ul>
+    </div>
+    <div class="page-wrapper">
+      <div class="dark-box"></div>
+      <div class="content">
+        <h1 id="overview">Overview</h1>
+
+<p>This specification describes a
+<a href="http://en.wikipedia.org/wiki/Hooking">&ldquo;hook&rdquo;</a>-based pattern for invoking
+decision support from within a clinician&rsquo;s EHR workflow. The API supports:</p>
+
+<ul>
+<li>Synchronous, workflow-triggered CDS calls returning information and suggestions</li>
+<li>Launching a user-facing SMART app when CDS requires deeper interaction</li>
+<li>Long-running, non-modal CDS sessions that observe EHR activity in progress</li>
+</ul>
+
+<aside class="notice">
+The CDS Hooks API is still in active development and thus subject to change. We&rsquo;re currently working towards a 1.0 release and would love your feedback and proposed changes. Look at our <a href="http://github.com/cds-hooks/docs/issues">current issue list</a> and get involved!
+</aside>
+
+<h2 id="how-it-works">How it works</h2>
+
+<p>User activity inside the EHR triggers <strong>CDS hooks</strong> in real-time.  For example:</p>
+
+<ul>
+<li><code class="prettyprint">patient-view</code> when opening a new patient record</li>
+<li><code class="prettyprint">medication-prescribe</code> on authoring a new prescription</li>
+<li><code class="prettyprint">order-review</code> on viewing pending orders for approval</li>
+</ul>
+
+<p>When a triggering activity occurs, the EHR notifies each CDS service registered for the activity. These services must then provide near-real-time feedback about the triggering event. Each service gets basic details about the EHR
+context (via the <code class="prettyprint">context</code> parameter of the hook) plus whatever
+service-specific data are required (via the <code class="prettyprint">pre-fetch-template</code> parameter).</p>
+
+<p><img alt="CDS Hooks Overview" src="images/overview-with-decisions.png" /></p>
+
+<h2 id="cds-cards">CDS Cards</h2>
+
+<p>Each CDS service can return any number of <strong>cards</strong> in response to the hook.
+Cards convey some combination of text (<em>information card</em>), alternative
+suggestions (<em>suggestion card</em>), and links to apps or reference
+materials (<em>app link card</em>). A user sees these cards — one or more of each type
+— embedded in the EHR, and can interact with them as follows:</p>
+
+<ul>
+<li><p><em>information card</em>: provides text for the user to read.</p></li>
+<li><p><em>suggestion card</em>: provides a specific suggestion for which the EHR renders a button that the user can click to accept. Clicking automatically populates the suggested change into the EHR&rsquo;s UI.</p></li>
+<li><p><em>app link card</em>: provides a link to an app (often a SMART app) where the user can supply details, step through a flowchart, or do anything else required to help reach an informed decision. When the user has finished, flow returns to the EHR. At that point, the <strong>EHR re-triggers the initial CDS hook</strong>. The re-triggering may result in different cards, and may also include <strong>decisions</strong> (see below).</p></li>
+</ul>
+
+<h2 id="cds-decisions">CDS Decisions</h2>
+
+<p>In addition to cards, a CDS service may also return <strong>decisions</strong> — but only
+after a user has interacted with the service via an <em>app link card</em>.
+Returning a decision allows the the CDS service to communicate the user&rsquo;s choices  to the EHR without displaying an additional card.  For
+example, a user might launch a hypertension management app, and upon
+returning to the EHR&rsquo;s prescription page she expects her new blood pressure
+prescription to &ldquo;just be there&rdquo;. By returning a decision <em>instead of a card</em>,
+the CDS service achieves this expected behavior. (<em>Note:</em> To return a
+decision after a user interaction, the CDS service must maintain state
+associated with the request&rsquo;s <code class="prettyprint">hookInstance</code>;
+when the EHR invokes the hook for a second time with the same
+<code class="prettyprint">hookInstance</code>, the service can respond with decisions on as well as cards.)</p>
+
+<h1 id="try-it">Try it!</h1>
+
+<p>You can try CDS Hooks in our test harness at <strong><a href="http://sandbox.cds-hooks.org">http://sandbox.cds-hooks.org</a></strong></p>
+
+          <h1 id="cds-services">CDS Services</h1>
+
+<h2 id="discovery">Discovery</h2>
+<pre class="highlight shell"><code>curl <span class="s2">"https://example.com/cds-services"</span>
+</code></pre>
+
+<blockquote>
+<p>The above command returns JSON structured like this:</p>
+</blockquote>
+<pre class="highlight json"><code><span class="p">{</span><span class="w">
+  </span><span class="nt">"services"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"hook"</span><span class="p">:</span><span class="w"> </span><span class="s2">"patient-view"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"title"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Static CDS Service Example"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"An example of a CDS service that returns a static set of cards"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"static-patient-greeter"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"prefetch"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"patientToGreet"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Patient/{{Patient.id}}"</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"hook"</span><span class="p">:</span><span class="w"> </span><span class="s2">"medication-prescribe"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"title"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Medication Echo CDS Service"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"An example of a CDS service that simply echos the medication being prescribed"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"medication-echo"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"prefetch"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"patient"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Patient/{{Patient.id}}"</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"medications"</span><span class="p">:</span><span class="w"> </span><span class="s2">"MedicationOrder?patient={{Patient.id}}"</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">]</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+
+<p>Developers of CDS Services must provide a well-known endpoint allowing the EHR to discover all available CDS Services, including information such as the purpose of the CDS Service, when it should be invoked, and any data that is requested to be prefetched.</p>
+
+<h3 id="http-request">HTTP Request</h3>
+
+<p>The discovery endpoint is always available at <code class="prettyprint">{baseUrl}/cds-services</code>. For example, if the <code class="prettyprint">baseUrl</code> is https://example.com, the EHR would invoke:</p>
+
+<p><code class="prettyprint">GET https://example.com/cds-services</code></p>
+
+<h3 id="response">Response</h3>
+
+<p>The response to the discovery endpoint is an object containing a list of CDS Services.</p>
+
+<table><thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><code class="prettyprint">services</code></td>
+<td><em>array</em>. An array of <strong>CDS Services</strong></td>
+</tr>
+</tbody></table>
+
+<p>Each CDS Service is described by the following attributes.</p>
+
+<table><thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><code class="prettyprint">hook</code></td>
+<td><em>string</em> or <em>url</em>. The hook this service should be invoked on. See <a href="#hook-catalog">Hook Catalog</a></td>
+</tr>
+<tr>
+<td><code class="prettyprint">title</code></td>
+<td><em>string</em>.  The human-friendly name of this service</td>
+</tr>
+<tr>
+<td><nobr><code class="prettyprint">description</code></nobr></td>
+<td><em>string</em>. The description of this service</td>
+</tr>
+<tr>
+<td><code class="prettyprint">id</code></td>
+<td><em>string</em>. The {id} portion of the URL to this service which is available at<br /><code class="prettyprint">{baseUrl}/cds-services/{id}</code></td>
+</tr>
+<tr>
+<td><code class="prettyprint">prefetch</code></td>
+<td><em>object</em>. An object containing key/value pairs of FHIR queries to data that this service would like the EHR prefetch and provide on<br />each service call. The key is a <em>string</em> that describes the type<br />of data being requested and the value is a <em>string</em> representing<br />the FHIR query.<br />(todo: link to prefetching documentation)</td>
+</tr>
+</tbody></table>
+
+<h3 id="http-status-codes">HTTP Status Codes</h3>
+
+<table><thead>
+<tr>
+<th>Code</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><code class="prettyprint">200 OK</code></td>
+<td>A successful response</td>
+</tr>
+</tbody></table>
+
+<h2 id="calling-a-cds-service">Calling a CDS Service</h2>
+<pre class="highlight plaintext"><code>curl
+  -X POST \
+  -H 'Content-type: application/json' \
+  --data @hook-details-see-example-below
+  "https://example.com/cds-services/static-patient-greeter"
+</code></pre>
+<pre class="highlight json"><code><span class="p">{</span><span class="w">
+   </span><span class="nt">"hookInstance"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="s2">"d1577c69-dfbe-44ad-ba6d-3e05e953b2ea"</span><span class="p">,</span><span class="w">
+   </span><span class="nt">"fhirServer"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="s2">"http://hooks.smarthealthit.org:9080"</span><span class="p">,</span><span class="w">
+   </span><span class="nt">"hook"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="s2">"patient-view"</span><span class="p">,</span><span class="w">
+   </span><span class="nt">"redirect"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="s2">"http://hooks2.smarthealthit.org/service-done.html"</span><span class="p">,</span><span class="w">
+   </span><span class="nt">"user"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="s2">"Practitioner/example"</span><span class="p">,</span><span class="w">
+   </span><span class="nt">"context"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="p">[],</span><span class="w">
+   </span><span class="nt">"patient"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="s2">"1288992"</span><span class="p">,</span><span class="w">
+   </span><span class="nt">"prefetch"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"patientToGreet"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+         </span><span class="nt">"response"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nt">"status"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="s2">"200 OK"</span><span class="w">
+         </span><span class="p">},</span><span class="w">
+         </span><span class="nt">"resource"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nt">"resourceType"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="s2">"Patient"</span><span class="p">,</span><span class="w">
+            </span><span class="nt">"gender"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="s2">"male"</span><span class="p">,</span><span class="w">
+            </span><span class="nt">"birthDate"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="s2">"1925-12-23"</span><span class="p">,</span><span class="w">
+            </span><span class="nt">"id"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="s2">"1288992"</span><span class="p">,</span><span class="w">
+            </span><span class="nt">"active"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w">
+         </span><span class="p">}</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+   </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+
+<h3 id="http-request">HTTP Request</h3>
+
+<p>An EHR calls a CDS service by <code class="prettyprint">POST</code>ing a JSON document to the service
+endpoint, which can be constructed from the CDS Service base URL and an
+individual service id as <code class="prettyprint">{baseUrl}/cds-services/{service.id}</code>.  The CDS Hook
+call includes a JSON POST body with the following input fields:</p>
+
+<table><thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><code class="prettyprint">hook</code></td>
+<td><em>string</em> or <em>URL</em>. The hook that triggered this CDS Service call<br />(todo: link to hook documentation)</td>
+</tr>
+<tr>
+<td><nobr><code class="prettyprint">hookInstance</code></nobr></td>
+<td><em>string</em>.  A UUID for this particular hook call (see more information below)</td>
+</tr>
+<tr>
+<td><code class="prettyprint">fhirServer</code></td>
+<td><em>URL</em>.  The base URL EHR&rsquo;s <a href="https://www.hl7.org/fhir/">FHIR</a> server. The scheme should be <code class="prettyprint">https</code></td>
+</tr>
+<tr>
+<td><code class="prettyprint">oauth</code></td>
+<td><em>object</em>. The OAuth2 authorization providing access to the EHR&rsquo;s FHIR server (see more information below)</td>
+</tr>
+<tr>
+<td><code class="prettyprint">redirect</code></td>
+<td><em>URL</em>.  The URL an app link card should redirect to (see more information below)</td>
+</tr>
+<tr>
+<td><code class="prettyprint">user</code></td>
+<td><em>string</em>.  The FHIR resource type + id representing the current user.<br />The type is one of: <a href="https://www.hl7.org/fhir/practitioner.html">Practitioner</a>, <a href="https://www.hl7.org/fhir/patient.html">Patient</a>, or <a href="https://www.hl7.org/fhir/relatedperson.html">RelatedPerson</a>.<br />For example, <code class="prettyprint">Practitioner/123</code></td>
+</tr>
+<tr>
+<td><code class="prettyprint">patient</code></td>
+<td><em>string</em>.  The FHIR <code class="prettyprint">Patient.id</code> of the current patient in context</td>
+</tr>
+<tr>
+<td><code class="prettyprint">encounter</code></td>
+<td><em>string</em>.  The FHIR <code class="prettyprint">Encounter.id</code> of the current encounter in context</td>
+</tr>
+<tr>
+<td><code class="prettyprint">context</code></td>
+<td><em>object</em>.  Hook-specific contextual data that the CDS service will need.<br />For example, with the <code class="prettyprint">medication-prescribe</code> hook this will include <a href="https://www.hl7.org/fhir/medicationorder.html">MedicationOrder</a> being prescribed.</td>
+</tr>
+<tr>
+<td><code class="prettyprint">prefetch</code></td>
+<td><em>object</em>.  The FHIR data that was prefetched by the EHR (see more information below)</td>
+</tr>
+</tbody></table>
+
+<h4 id="hookinstance">hookInstance</h4>
+
+<p>While working in the EHR, a user can perform
+multiple activities in series or in parallel. For example, a clinician might prescribe
+two drugs in a row; each prescription activity would be assigned a
+unique <code class="prettyprint">hookInstance</code>. The [[activity catalog|Activity]]
+provides a description of what events should initiate and terminate
+a given hook. This allows an external
+service to associate requests with activity state, which is necessary to
+support the following app-centric decision sequence, where
+the steps are tied together by a common <code class="prettyprint">hookInstance</code>:</p>
+
+<ol>
+<li>EHR invokes CDS hook</li>
+<li>CDS service returns <em>app link card</em></li>
+<li>User clicks app link and interacts with app</li>
+<li>Flow returns to EHR, which re-invokes CDS hook</li>
+<li>CDS service returns <em>decision</em> with user&rsquo;s choice</li>
+</ol>
+
+<p>Note: the <code class="prettyprint">hookInstance</code> is globally unique and should contain enough entropy
+to be un-guessable.</p>
+
+<h4 id="oauth">oauth</h4>
+
+<p>Security details allowing the CDS service to connect to the EHR&rsquo;s
+FHIR server.  These fields allow the CDS service to access EHR data in a
+context limited by the current user&rsquo;s privileges. <code class="prettyprint">expires</code> expresses the
+token lifetime as an integer number of seconds. <code class="prettyprint">scope</code> represents the set of
+scopes assigned to this token (see <a href="http://docs.smarthealthit.org/authorization/scopes-and-launch-context/">SMART on FHIR
+scopes</a>).
+Finally, <code class="prettyprint">token</code> is a bearer token to be presented with any API calls the CDS
+service makes to the EHR, by including it in an Authorization header like:</p>
+
+<p><code class="prettyprint">Authorization: Bearer {{token}}</code></p>
+
+<h4 id="redirect">redirect</h4>
+
+<p>This field is only used by services that will return an <em>app
+link card</em>: when a user clicks the card&rsquo;s link to launch an app, it becomes
+the app&rsquo;s job to send the user to <em>this <code class="prettyprint">redirect</code> URL</em> upon completion of
+user interaction. (<em>Design note</em>: this field is supplied up-front, as part of
+the initial request, to avoid requiring the EHR to append any content to app
+launch links. This helps support an important &ldquo;degenerate&rdquo; use case for app
+link cards: pointing to static content. See below for details.)</p>
+
+<h4 id="prefetch">prefetch</h4>
+
+<p>As a performance tweak, the EHR may pass along data according
+to the service&rsquo;s [[Prefetch-Template]]. This helps provide the service with all
+the data it needs to efficiently compute a set of recommendations. Each key matches a key described in the CDS Service Discovery document; and each value is a FHIR Bundle.entry indicating a response status and returned resource.</p>
+
+<p>Note that in the absence of <code class="prettyprint">prefetch</code>, an external service can always execute
+FHIR REST API calls against the EHR server to obtain additional data ad-hoc.)</p>
+
+<aside class="notice">
+You can see the <a href="http://editor.swagger.io/?url=https://raw.githubusercontent.com/cds-hooks/api/master/cds-hooks.yaml">complete data model in Swagger</a>.
+</aside>
+
+<h2 id="cds-service-response">CDS Service Response</h2>
+
+<blockquote>
+<p>Example response</p>
+</blockquote>
+<pre class="highlight json"><code><span class="p">{</span><span class="w">
+  </span><span class="nt">"cards"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"summary"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Success Card"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"indicator"</span><span class="p">:</span><span class="w"> </span><span class="s2">"success"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"detail"</span><span class="p">:</span><span class="w"> </span><span class="s2">"This is an example success card."</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"source"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"label"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Static CDS Service Example"</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"url"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://example.com"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"links"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+        </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"label"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Google"</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"url"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://google.com"</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"absolute"</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"label"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Github"</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"url"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://github.com"</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"absolute"</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"label"</span><span class="p">:</span><span class="w"> </span><span class="s2">"SMART Example App"</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"url"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://smart.example.com/launch"</span><span class="p">,</span><span class="w">
+          </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"smart"</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+      </span><span class="p">]</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"summary"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Info card"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"indicator"</span><span class="p">:</span><span class="w"> </span><span class="s2">"info"</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"source"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"label"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Static CDS Service Example"</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">]</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+
+<table><thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><code class="prettyprint">cards</code></td>
+<td><em>array</em>. An array of <strong>Cards</strong>. Cards can provide a combination of information (for reading), suggested actions (to be applied if a user selects them), and links (to launch an app if the user selects them). The EHR decides how to display cards, but we recommend displaying suggestions using buttons, and links using underlined text.</td>
+</tr>
+<tr>
+<td><nobr><code class="prettyprint">decisions</code></nobr></td>
+<td><em>array</em>. An array of <strong>Decisions</strong>. A decision should only be generated after interacting with the user through an app link. Decisions are designed to convey any choices the user made in an app session.</td>
+</tr>
+</tbody></table>
+
+<p>represents a user&rsquo;s choice made while interacting with the CDS Provider&rsquo;s external app. The first call to a service should never include any <code class="prettyprint">decisions</code>, since no user interaction has occurred yet.</p>
+
+<p>Each <strong>Card</strong> is described by the following attributes.</p>
+
+<table><thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><code class="prettyprint">summary</code></td>
+<td><em>string</em>. one-sentence, &lt;140-character summary message for display to the user inside of this card.</td>
+</tr>
+<tr>
+<td><code class="prettyprint">detail</code></td>
+<td><em>string</em>.  optional detailed information to display, represented in Markdown. (For non-urgent cards, the EHR may hide these details until the user clicks a link like &ldquo;view more details&hellip;&rdquo;.)</td>
+</tr>
+<tr>
+<td><code class="prettyprint">indicator</code></td>
+<td><em>string</em>.  urgency/importance of what this card conveys. Allowed values, in order of increasing urgency, are: <code class="prettyprint">success</code>, <code class="prettyprint">info</code>, <code class="prettyprint">warning</code>, <code class="prettyprint">hard-stop</code>. The EHR can use this field to help make UI display decisions such as sort order or coloring. The value <code class="prettyprint">hard-stop</code> indicates that the workflow should not be allowed to proceed.</td>
+</tr>
+<tr>
+<td><code class="prettyprint">source</code></td>
+<td><em>object</em>. grouping structure for the <strong>Source</strong> of the information displayed on this card. The source should be the primary source of guidance for the decision support the card represents.</td>
+</tr>
+<tr>
+<td><nobr><code class="prettyprint">suggestions</code></nobr></td>
+<td><em>array</em> of <strong>Suggestions</strong>, which allow a service to suggest a set of changes in the context of the current activity (e.g.  changing the dose of the medication currently being prescribed, for the <code class="prettyprint">medication-prescribe</code> activity)</td>
+</tr>
+<tr>
+<td><code class="prettyprint">links</code></td>
+<td><em>array</em> of <strong>Links</strong>, which allow a service to suggest a link to an app that the user might want to run for additional information or to help guide a decision.</td>
+</tr>
+</tbody></table>
+
+<p>The <strong>Source</strong> is described by the following attributes.</p>
+
+<table><thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><nobr><code class="prettyprint">label</code></nobr></td>
+<td><em>string</em>. A short, human-readable label to display for the source of the information displayed on this card. If a <code class="prettyprint">url</code> is also specified, this may be the text for the hyperlink.</td>
+</tr>
+<tr>
+<td><code class="prettyprint">url</code></td>
+<td><em>URL</em>. An optional absolute URL to load (via <code class="prettyprint">GET</code>, in a browser context) when a user clicks on this link to learn more about the organization or data set that provided the information on this card. Note that this URL should not be used to supply a context-specific &ldquo;drill-down&rdquo; view of the information on this card. For that, use <code class="prettyprint">link.url</code> instead.</td>
+</tr>
+</tbody></table>
+
+<p>Each <strong>Suggestion</strong> is described by the following attributes.</p>
+
+<table><thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><code class="prettyprint">label</code></td>
+<td><em>string</em>. human-readable label to display for this suggestion (e.g. the EHR might render this as the text on a button tied to this suggestion).</td>
+</tr>
+<tr>
+<td><code class="prettyprint">uuid</code></td>
+<td><em>string</em>. unique identifier for this suggestion. For details see <a href="#analytics">Suggestion Tracking Analytics</a></td>
+</tr>
+<tr>
+<td><nobr><code class="prettyprint">create</code></nobr></td>
+<td><em>string</em>. new resource(s) that this suggestion applies within the current activity (e.g. for <code class="prettyprint">medication-prescribe</code>, this holds the updated prescription as proposed by the suggestion).</td>
+</tr>
+<tr>
+<td><code class="prettyprint">delete</code></td>
+<td><em>string</em>. id(s) of any resources to remove from the current activity (e.g. for the <code class="prettyprint">order-review</code> activity, this would provide a way to remove orders from the pending list). In activities like <code class="prettyprint">medication-prescribe</code> where only one &ldquo;content&rdquo; resource is ever relevant, this field may be omitted.</td>
+</tr>
+</tbody></table>
+
+<p>Each <strong>Link</strong> is described by the following attributes.</p>
+
+<table><thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><nobr><code class="prettyprint">label</code></nobr></td>
+<td><em>string</em>. human-readable label to display for this link (e.g. the EHR might render this as the underlined text of a clickable link).</td>
+</tr>
+<tr>
+<td><code class="prettyprint">url</code></td>
+<td><em>URL</em>. URL to load (via <code class="prettyprint">GET</code>, in a browser context) when a user clicks on this link. Note that this may be a &ldquo;deep link&rdquo; with context embedded in path segments, query parameters, or a hash. In general this URL should embed enough context for the app to determine the <code class="prettyprint">hookInstance</code>, and <code class="prettyprint">redirect</code> url upon downstream launch, because the EHR will simply use this url as-is, without appending any parameters at launch time.</td>
+</tr>
+<tr>
+<td><code class="prettyprint">type</code></td>
+<td><em>string</em>. The type of the given URL. There are two possible values for this field. A type of <code class="prettyprint">absolute</code> indicates that the URL is absolute and should be treated as-is. A type of <code class="prettyprint">smart</code> indicates that the URL is a SMART app launch URL and the EHR should ensure the SMART app launch URL is populated with the appropriate SMART launch parameters.</td>
+</tr>
+</tbody></table>
+
+<p>Each <strong>Decision</strong> is described by the following attributes.</p>
+
+<table><thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><code class="prettyprint">create</code></td>
+<td><em>array</em> of <em>strings</em>. id(s) of new resource(s) that the EHR should create within the current activity (e.g. for <code class="prettyprint">medication-prescribe</code>, this would be the updated prescription that a user had authored in an app session).</td>
+</tr>
+<tr>
+<td><nobr><code class="prettyprint">delete</code></nobr></td>
+<td><em>array</em> of <em>strings</em>. id(s) of any resources to remove from the current activity (e.g. for the <code class="prettyprint">order-review</code> activity, this would provide a way to remove orders from the pending list). In activities like <code class="prettyprint">medication-prescribe</code> where only one &ldquo;content&rdquo; resource is ever relevant, this field may be omitted.</td>
+</tr>
+</tbody></table>
+
+<h1 id="analytics">Analytics</h1>
+
+<p>Whenever a user clicks a button from a &ldquo;suggestion&rdquo; card, the EHR uses the
+suggestion <code class="prettyprint">uuid</code> to notify the CDS Service&rsquo;s analytics endpoint via a <code class="prettyprint">POST</code>
+with an empty body:</p>
+
+<p><code class="prettyprint">POST {baseUrl}/cds-services/{serviceId}/analytics/{uuid}</code></p>
+
+<p>If a suggestion has no <code class="prettyprint">uuid</code>, the EHR does not send a notification.</p>
+
+          <h1 id="prefetch">Prefetch</h1>
+
+<h2 id="a-performance-tweak">A performance tweak</h2>
+
+<p>If real-world performance were no issue, an EHR could launch a CDS Service
+passing only <em>context</em> data, and <em>without passing any additional clinical data</em>
+up-front. The CDS Service could then request any data it needed via the EHR&rsquo;s
+FHIR REST API.</p>
+
+<p>But CDS services must respond quickly (on the order of 500 ms), and so we
+provide a performance tweak that allows an app to register a set of &ldquo;prefetch
+templates&rdquo; with the EHR ahead of time.</p>
+
+<p>The prefetch templates are a dictionary <code class="prettyprint">read</code> and <code class="prettyprint">search</code> requests to supply
+relevant data, where the following variables are defined:</p>
+
+<table><thead>
+<tr>
+<th>variable</th>
+<th>meaning</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><code class="prettyprint">{{Patient.id}}</code></td>
+<td>The id of the patient in context for this activity (e.g. <code class="prettyprint">123</code>)</td>
+</tr>
+<tr>
+<td><code class="prettyprint">{{User.id}}</code></td>
+<td>The type and id of the user for this session (e.g. <code class="prettyprint">Practitioner/123</code>)</td>
+</tr>
+</tbody></table>
+
+<p>Before calling the CDS Service, the EHR will fill out this template, replacing
+<code class="prettyprint">{{Patient.id}}</code> with the id of the current patient (e.g. <code class="prettyprint">123</code>) inside of any
+URL strings. The EHR then executes the requests in the template as a set of
+FHIR <code class="prettyprint">read</code> and <code class="prettyprint">search</code> operations (exactly as though they had been submitted
+to the server&rsquo;s &ldquo;transaction&rdquo; endpoint as a FHIR batch-type bundle).</p>
+
+<p>The resulting response, which must be rendered in a single page — no &ldquo;next
+page&rdquo; links allowed — is passed along to the CDS Service using the
+<code class="prettyprint">prefetch</code> parameter (see below for a complete example).</p>
+
+<h2 id="example-prefetch-request">Example prefetch request</h2>
+<pre class="highlight json"><code><span class="p">{</span><span class="w">
+  </span><span class="nt">"prefetch"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"p"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Patient/{{Patient.id}}"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"a1c"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Observation?patient={{Patient.id}}&amp;code=4548-4&amp;_count=1&amp;sort:desc=date"</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+
+<p>Here is an example prefetch property from a CDS service discovery endpoint. The
+goal is to know, at call time:</p>
+
+<ul>
+<li>Patient demographics</li>
+<li>Most recent Hemoglobin A1c reading for this patient</li>
+</ul>
+
+<h2 id="example-prefetch-response">Example prefetch response</h2>
+<pre class="highlight json"><code><span class="p">{</span><span class="w">
+  </span><span class="nt">"prefetch"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"p"</span><span class="p">:{</span><span class="w">
+      </span><span class="nt">"response"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"200 OK"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"resource"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"resourceType"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Patient"</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"gender"</span><span class="p">:</span><span class="w"> </span><span class="s2">"male"</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"birthDate"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1974-12-25"</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"..."</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;snipped for brevity&gt;"</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nt">"a1c"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"response"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"200 OK"</span><span class="w">
+      </span><span class="p">},</span><span class="w">
+      </span><span class="nt">"resource"</span><span class="p">:{</span><span class="w">
+        </span><span class="nt">"resourceType"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Bundle"</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"searchset"</span><span class="p">,</span><span class="w">
+        </span><span class="nt">"entry"</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="w">
+          </span><span class="nt">"resource"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nt">"resourceType"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Observation"</span><span class="p">,</span><span class="w">
+            </span><span class="nt">"code"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+              </span><span class="nt">"coding"</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="w">
+                </span><span class="nt">"system"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http://loinc.org"</span><span class="p">,</span><span class="w">
+                </span><span class="nt">"code"</span><span class="p">:</span><span class="w"> </span><span class="s2">"4548-4"</span><span class="p">,</span><span class="w">
+                </span><span class="nt">"display"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Hemoglobin A1c"</span><span class="w">
+              </span><span class="p">}]</span><span class="w">
+            </span><span class="p">},</span><span class="w">
+            </span><span class="nt">"..."</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;snipped for brevity&gt;"</span><span class="w">
+          </span><span class="p">}</span><span class="w">
+        </span><span class="p">}]</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+
+<p>The response is augmented to include two prefetch values, where the dictionary
+keys match the request keys (<code class="prettyprint">p</code> and <code class="prettyprint">a1c</code> in this case).</p>
+
+<p>Note that a missing key indicates that an EHR has not attempted to supply a
+given prefetch value; the CDS service can issue the request manually at call
+time to fetch the required data.&ldquo;</p>
+
+          <h1 id="hook-catalog">Hook Catalog</h1>
+
+<h2 id="pre-defined-cds-hooks">Pre-defined CDS hooks</h2>
+
+<p>We describe a set of hooks to support common use cases out of the box.
+But <strong>this is not a closed set</strong>; anyone can define new hooks to address new use
+cases. To propose a new hooks please add it to the <a href="https://github.com/cds-hooks/docs/wiki/Proposed-Hooks">proposed hooks</a> page of our wiki.</p>
+
+<p>Note that each hook (e.g. <code class="prettyprint">medication-prescribe</code>) represents something the user is doing in the EHR; various hooks might respond to the same hook (e.g. a &ldquo;price check&rdquo; service and a &ldquo;prior authorization&rdquo; service might both respond to <code class="prettyprint">medication-prescribe</code>).</p>
+
+<p>Note also that each hook name in our official catalog is a simple string. If
+you want to define custom hooks without submitting them to the catalog, then
+you should use a URI (e.g.
+<code class="prettyprint">http://my-organization/custom-hooks/patient-transmogrify</code>).</p>
+
+<h2 id="medication-prescribe"><code class="prettyprint">medication-prescribe</code></h2>
+<pre class="highlight json"><code><span class="p">{</span><span class="w">
+  </span><span class="nt">"context"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"resourceType"</span><span class="p">:</span><span class="w"> </span><span class="s2">"MedicationOrder"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"medicationCodeableConcept"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nt">"..."</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;snipped for brevity&gt;"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+
+<p><strong>Purpose</strong>: Inform an external CDS service that the user is in the process of
+prescribing a new medication, and solicit feedback about the
+prescription-in-progress.</p>
+
+<p><strong>Contextual data</strong>: The set of proposed medication prescriptions. using the
+FHIR <code class="prettyprint">MedicationOrder</code> resource. See example in the sidebar.</p>
+
+<h2 id="order-review"><code class="prettyprint">order-review</code></h2>
+<pre class="highlight json"><code><span class="p">{</span><span class="w">
+  </span><span class="nt">"context"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"resourceType"</span><span class="p">:</span><span class="w"> </span><span class="s2">"DiagnosticOrder"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"..."</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;snipped for brevity&gt;"</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+
+<p><strong>Purpose</strong>: Inform an external CDS service that the user is in the process of
+reviewing a set of orders (sometimes known as a &ldquo;shopping cart&rdquo;), and solicit
+feedback about the orders being reviewed.</p>
+
+<p><strong>Contextual data</strong>: The set of orders being reviewed on-screen, represented
+using a combination of MedicationOrder, DiagnosticOrder, DeviceUseRequest,
+ReferralRequest, and ProcedureRequest. See example in the sidebar.</p>
+
+<h2 id="patient-view"><code class="prettyprint">patient-view</code></h2>
+
+<p><strong>Purpose</strong>: Inform an external CDS service that the user has just opened a new
+patient record and is viewing a summary screen or &ldquo;face sheet&rdquo;, and solicit
+feedback about this patient.</p>
+
+<p><strong>Contextual data</strong>: None required beyond default context.</p>
+
+          <h1 id="community">Community</h1>
+
+<h2 id="get-involved">Get Involved</h2>
+
+<p>There are several ways in which you can get involved with the CDS Hooks community.</p>
+
+<ul>
+<li>Ask a question and participate in discussions via the <a href="https://groups.google.com/forum/#!forum/cds-hooks">CDS Hooks Google Group</a></li>
+<li>Chat via <a href="https://zulip.org/">Zulip</a> at <a href="https://chat.fhir.org">https://chat.fhir.org</a> in the <em>cds-hooks</em> stream</li>
+<li>Contribute to the <a href="https://github.com/cds-hooks">code and documentation on Github</a></li>
+<li>Check out the <a href="https://github.com/cds-hooks/docs/wiki/CDS-Services-for-testing">CDS services available for testing</a> and contribute your own.</li>
+</ul>
+
+<h2 id="cds-hooks-sprint-program">CDS Hooks Sprint Program</h2>
+
+<h3 id="objectives">Objectives</h3>
+
+<ul>
+<li>Promote creation of clinical-grade service integrations (EHRs + CDS Services)</li>
+<li>Gain implementation experience with real-world systems</li>
+<li>Refine the spec, balancing ease of use, flexibility, and stability</li>
+<li>Drive toward pilot deployments with the ability to measure results</li>
+</ul>
+
+<h3 id="want-to-help-build-our-test-infrastructure">Want to help build our test infrastructure?</h3>
+
+<ul>
+<li><strong><a href="https://github.com/cds-hooks/cds-hooks/labels/help%20wanted">help-wanted issues</a></strong></li>
+<li><strong><a href="https://github.com/cds-hooks/cds-hooks/milestones">Proposed Milestones</a></strong></li>
+</ul>
+
+      </div>
+      <div class="dark-box">
+          <div class="lang-selector">
+                <a href="#" data-language-name="code">code</a>
+          </div>
+      </div>
+    </div>
+  </body>
+</html>
