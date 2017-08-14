@@ -146,7 +146,7 @@ The CDS Hooks API is still in active development and thus subject to change. We&
 context (via the <code class="prettyprint">context</code> parameter of the hook) plus whatever
 service-specific data are required (via the <code class="prettyprint">pre-fetch-template</code> parameter).</p>
 
-<p><img alt="CDS Hooks Overview" src="images/overview-with-decisions.png" /></p>
+<p><img alt="CDS Hooks Overview" src="images/overview.png" /></p>
 
 <h2 id="cds-cards">CDS Cards</h2>
 
@@ -517,7 +517,7 @@ You can see the <a href="http://editor.swagger.io/?url=https://raw.githubusercon
 </tr>
 <tr>
 <td><nobr><code class="prettyprint">suggestions</code></nobr></td>
-<td><em>array</em> of <strong>Suggestions</strong>, which allow a service to suggest a set of changes in the context of the current activity (e.g.  changing the dose of the medication currently being prescribed, for the <code class="prettyprint">medication-prescribe</code> activity)</td>
+<td><em>array</em> of <strong>Suggestions</strong>, which allow a service to suggest a set of changes in the context of the current activity (e.g.  changing the dose of the medication currently being prescribed, for the <code class="prettyprint">medication-prescribe</code> activity). Note that suggestions are implicitly OR&rsquo;d.</td>
 </tr>
 <tr>
 <td><code class="prettyprint">links</code></td>
@@ -547,7 +547,7 @@ You can see the <a href="http://editor.swagger.io/?url=https://raw.githubusercon
 </tr>
 </tbody></table>
 
-<p>Each <strong>Suggestion</strong> is described by the following attributes. </p>
+<p>Each <strong>Suggestion</strong> is described by the following attributes.</p>
 
 <table><thead>
 <tr>
@@ -565,7 +565,7 @@ You can see the <a href="http://editor.swagger.io/?url=https://raw.githubusercon
 </tr>
 <tr>
 <td><code class="prettyprint">actions</code></td>
-<td><em>array</em>. array of objects, each defining a suggested action. Within a suggestion, all actions are logically AND&rsquo;d together, such that a user selecting a suggestion selects all of the actions within it. Note that suggestions are implicitly OR&rsquo;d.</td>
+<td><em>array</em>. array of objects, each defining a suggested action. Within a suggestion, all actions are logically AND&rsquo;d together, such that a user selecting a suggestion selects all of the actions within it.</td>
 </tr>
 </tbody></table>
 
@@ -579,7 +579,7 @@ You can see the <a href="http://editor.swagger.io/?url=https://raw.githubusercon
 </thead><tbody>
 <tr>
 <td><code class="prettyprint">type</code></td>
-<td><em>string</em>. action&rsquo;s crud type. Allowed values are: <code class="prettyprint">create</code>, <code class="prettyprint">update</code>, <code class="prettyprint">delete</code>.</td>
+<td><em>string</em>. The type of action being performed. Allowed values are: <code class="prettyprint">create</code>, <code class="prettyprint">update</code>, <code class="prettyprint">delete</code>.</td>
 </tr>
 <tr>
 <td><code class="prettyprint">description</code></td>
@@ -663,10 +663,10 @@ up-front. The CDS Service could then request any data it needed via the EHR&rsqu
 FHIR REST API.</p>
 
 <p>But CDS services must respond quickly (on the order of 500 ms), and so we
-provide a performance tweak that allows an app to register a set of &ldquo;prefetch
+provide a performance tweak that allows a CDS Service to register a set of &ldquo;prefetch
 templates&rdquo; with the EHR ahead of time.</p>
 
-<p>The prefetch templates are a dictionary <code class="prettyprint">read</code> and <code class="prettyprint">search</code> requests to supply
+<p>The prefetch templates are a dictionary of <code class="prettyprint">read</code> and <code class="prettyprint">search</code> requests to supply
 relevant data, where the following variables are defined:</p>
 
 <table><thead>
@@ -685,23 +685,28 @@ relevant data, where the following variables are defined:</p>
 </tr>
 </tbody></table>
 
-<p>Before calling the CDS Service, the EHR may fill out this template, replacing
-<code class="prettyprint">{{Patient.id}}</code> with the id of the current patient (e.g. <code class="prettyprint">123</code>) inside of any
-URL strings. The EHR then executes the requests in the template as a set of
-FHIR <code class="prettyprint">read</code> and <code class="prettyprint">search</code> operations (exactly as though they had been submitted
-to the server&rsquo;s &ldquo;transaction&rdquo; endpoint as a FHIR batch-type bundle).</p>
+<p>An EHR <em>may</em> choose to honor some or all of the desired prefetch templates from an appropriate source. For example:</p>
+
+<ul>
+<li>The EHR may have some of the desired prefetched data already in memory, thereby removing the need for any network call</li>
+<li>The EHR may compute an efficient set of prefetch templates from multiple CDS Services, thereby reducing the number of network calls to a minimum</li>
+<li>The EHR may satisfy some of the desired prefetched templates via some internal service or even its own FHIR server</li>
+</ul>
+
+<p>Regardless of how the EHR satisfies the prefetched templates (if at all), it is important that the prefetched data given to the CDS Service is equivalent to the CDS Service making its own call to the EHR FHIR server, where <code class="prettyprint">{{Patient.id}}</code> is replaced with the id of the current patient (e.g. <code class="prettyprint">123</code>) inside of any URL strings and using <code class="prettyprint">read</code> and <code class="prettyprint">search</code> operations to the server&rsquo;s &ldquo;transaction&rdquo; endpoint as a FHIR batch-type bundle.</p>
 
 <p>The resulting response, which must be rendered in a single page — no &ldquo;next
 page&rdquo; links allowed — is passed along to the CDS Service using the
 <code class="prettyprint">prefetch</code> parameter (see below for a complete example). </p>
 
-<p>When the EHR can&rsquo;t prefetch one or all of the requested resources, the CDS service won&rsquo;t receive all of the requested prefetch templates and may query the FHIR server for the missing information.</p>
+<p>The CDS Service must not receive any prefetch template key that the EHR chooses not to satisfy. Additionally, if the EHR encounters an error while retrieving any prefetched data, the prefetch template key should not be sent to the CDS Service. It is the CDS Service&rsquo;s responsibility to check to see what prefetched data was satisfied (if any) and manually retrieve any necessary data.</p>
 
 <h2 id="example-prefetch-request">Example prefetch request</h2>
 <pre class="highlight json"><code><span class="p">{</span><span class="w">
   </span><span class="nt">"prefetch"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"p"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Patient/{{Patient.id}}"</span><span class="p">,</span><span class="w">
-    </span><span class="nt">"a1c"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Observation?patient={{Patient.id}}&amp;code=4548-4&amp;_count=1&amp;sort:desc=date"</span><span class="w">
+    </span><span class="nt">"a1c"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Observation?patient={{Patient.id}}&amp;code=4548-4&amp;_count=1&amp;sort:desc=date"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"u"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Practitioner/{{User.id}}"</span><span class="w">
   </span><span class="p">}</span><span class="w">
 </span><span class="p">}</span><span class="w">
 </span></code></pre>
@@ -709,10 +714,25 @@ page&rdquo; links allowed — is passed along to the CDS Service using the
 <p>Here is an example prefetch property from a CDS service discovery endpoint. The
 goal is to know, at call time:</p>
 
-<ul>
-<li>Patient demographics</li>
-<li>Most recent Hemoglobin A1c reading for this patient</li>
-</ul>
+<table><thead>
+<tr>
+<th>Key</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><code class="prettyprint">p</code></td>
+<td>Patient demographics</td>
+</tr>
+<tr>
+<td><code class="prettyprint">a1c</code></td>
+<td>Most recent Hemoglobin A1c reading for this patient</td>
+</tr>
+<tr>
+<td><code class="prettyprint">u</code></td>
+<td>Information on the current user (Practitioner)</td>
+</tr>
+</tbody></table>
 
 <h2 id="example-prefetch-response">Example prefetch response</h2>
 <pre class="highlight json"><code><span class="p">{</span><span class="w">
@@ -757,25 +777,193 @@ goal is to know, at call time:</p>
 <p>The response is augmented to include two prefetch values, where the dictionary
 keys match the request keys (<code class="prettyprint">p</code> and <code class="prettyprint">a1c</code> in this case).</p>
 
-<p>Note that a missing key indicates that an EHR has not attempted to supply a
-given prefetch value; the CDS service can issue the request manually at call
-time to fetch the required data.&ldquo;</p>
+<p>Note that the missing <code class="prettyprint">u</code> key indicates that either the EHR has decided not to satisfy this particular prefetch template or it was not able to retrieve this prefetched data. The CDS Service is responsible for retrieving this Practitioner data from the FHIR server (if required).</p>
 
 <h2 id="prefetch-query-restrictions">Prefetch query restrictions</h2>
 
-<p>To reduce the implementation burden on EHRs that support CDS services, CDS Hooks requires that prefetch queries only use a subset of the full functionality available in the FHIR specification. Valid prefetch URLs are only allowed to contain:</p>
+<p>To reduce the implementation burden on EHRs that support CDS services, CDS Hooks recommends that prefetch queries only use a subset of the full functionality available in the FHIR specification. Valid prefetch URLs should only contain:</p>
 
 <ul>
-<li><em>instance</em> level read interactions (for the <code class="prettyprint">Patient</code> resource only)</li>
-<li><em>type</em> level search interactions (using <code class="prettyprint">GET</code>)</li>
+<li><em>instance</em> level <a href="https://www.hl7.org/fhir/http.html#read">read</a> interactions (for resources with known ids such as <code class="prettyprint">Patient</code> and <code class="prettyprint">Practitioner</code>)</li>
+<li><em>type</em> level <a href="https://www.hl7.org/fhir/http.html#search">search</a> interactions</li>
 <li>Patient references (e.g. <code class="prettyprint">patient={{Patient}}</code>)</li>
-<li><em>token</em> search parameters using equality (e.g. <code class="prettyprint">code=4548-4</code>) and optionally the <code class="prettyprint">:in</code> modifier (no other modifiers for token parameters are allowed)</li>
+<li><em>token</em> search parameters using equality (e.g. <code class="prettyprint">code=4548-4</code>) and optionally the <code class="prettyprint">:in</code> modifier (no other modifiers for token parameters)</li>
 <li><em>date</em> search parameters on <code class="prettyprint">date</code>, <code class="prettyprint">dateTime</code>, <code class="prettyprint">instant</code>, or <code class="prettyprint">Period</code> types only, and using only the prefixes <code class="prettyprint">eq</code>, <code class="prettyprint">lt</code>, <code class="prettyprint">gt</code>, <code class="prettyprint">ge</code>, <code class="prettyprint">le</code></li>
 <li>the <code class="prettyprint">_count</code> parameter to limit the number of results returned</li>
 <li>the <code class="prettyprint">_sort</code> parameter to allow for <em>most recent</em> and <em>first</em> queries</li>
 </ul>
 
           <h1 id="security">Security</h1>
+
+<aside class="notice">
+The proposed security model has not yet received implementer feedback and as such, is subject to change. Maintaining both a secure model and an easy implementation experience is a key concern of our impending 1.0 release. As such, we encourage open feedback on this proposed approach on <a href="https://github.com/cds-hooks/docs/issues/7">this Github issue</a> from all of our stakeholders.
+</aside>
+
+<p>CDS Hooks defines the agreed upon security model between an EHR and the CDS Service. Like SMART on FHIR, the security model of CDS Hooks leverages the same open and well supported standards like OAuth 2 and JSON web tokens. However, as CDS Hooks differs from SMART, the manny in which these standards are used is specific to CDS Hooks.</p>
+
+<h2 id="trusting-cds-services">Trusting CDS Services</h2>
+
+<p>As the EHR initiates every interaction with the CDS Service, it is responsible for establishing trust with the CDS Services it intends to call. This trust is established via a TLS connection to the CDS Service. Thus, all CDS Service endpoints must be deployed to a TLS protected URL (https). This includes both the Discovery and individual CDS Service endpoints.</p>
+
+<p>EHRs should use accepted best practices for verifying the authenticity and trust of these TLS connections. For instance, <a href="https://tools.ietf.org/html/rfc5280">rfc5280</a> and <a href="https://tools.ietf.org/html/rfc6125">rfc6125</a>. Additionally, it is assumed that EHRs configure the CDS Services they connect to via some offline process according to the business rules and practices of both the EHR and CDS Service organizations.</p>
+
+<h2 id="trusting-ehrs">Trusting EHRs</h2>
+
+<p>Since the CDS Service is invoked by the EHR, the CDS Service does not have the same mechanism as EHRs to establish trust of the EHR invoking it. To establish trust of the EHR, <a href="https://jwt.io/">JSON web tokens (JWT)</a> are used. Specifically, the JWT is the same <code class="prettyprint">id_token</code> used in SMART on FHIR.</p>
+
+<p>Each time the EHR makes a request to the CDS Service, it should send an <code class="prettyprint">Authorization</code> header where the value is <code class="prettyprint">Bearer &lt;token&gt;</code>, replacing <code class="prettyprint">&lt;token&gt;</code> with the actual JWT. Note that this is for every single CDS Service call, whether that be Discovery calls, CDS Service invocations, etc.</p>
+
+<blockquote>
+<p>Example JSON web token payload</p>
+</blockquote>
+<pre class="highlight json"><code><span class="p">{</span><span class="w">
+  </span><span class="nt">"iss"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://fhir-ehr.example.com/"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"sub"</span><span class="p">:</span><span class="w"> </span><span class="s2">"some-username"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"aud"</span><span class="p">:</span><span class="w"> </span><span class="s2">"44b16507-8a59-4369-96f9-1e9b1f9a0ace"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"exp"</span><span class="p">:</span><span class="w"> </span><span class="mi">1422568860</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"iat"</span><span class="p">:</span><span class="w"> </span><span class="mi">1311280970</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+
+<blockquote>
+<p>Using the above JWT payload, the complete JWT as passed in the Authorization HTTP header would be:</p>
+</blockquote>
+<pre class="highlight plaintext"><code>Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL2ZoaXItZWhyLmV4YW1wbGUuY29tLyIsImF1ZCI6Imh0dHBzOi8vY2RzLmV4YW1wbGUub3JnL2Nkcy1zZXJ2aWNlcyIsImV4cCI6MTQyMjU2ODg2MCwianRpIjoiMmFmNWU4YTUtYjVlZi00ZmQwLThkOTMtYzU2MGRhYzQwYzk4In0.ahR57rtcMFhvrHEEo9w13vVdLrhZs_gRY2NV6R2GAoU
+</code></pre>
+
+<p>The JWT from the EHR is signed with the EHR&rsquo;s private key and contains the following fields:</p>
+
+<table><thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>iss</td>
+<td>The base URL of the EHR&rsquo;s FHIR server. This must be the same URL as the <code class="prettyprint">fhirServer</code> field in a CDS Service request.</td>
+</tr>
+<tr>
+<td>sub</td>
+<td>The unique identifer for the current user</td>
+</tr>
+<tr>
+<td>aud</td>
+<td>The OAuth 2 client id of the CDS Service</td>
+</tr>
+<tr>
+<td>exp</td>
+<td>Expiration time integer for this authentication JWT, expressed in seconds since the &ldquo;Epoch&rdquo; (1970-01-01T00:00:00Z UTC).</td>
+</tr>
+<tr>
+<td>iat</td>
+<td>The time at which this JWT was issued, expressed in seconds since the &ldquo;Epoch&rdquo; (1970-01-01T00:00:00Z UTC).</td>
+</tr>
+</tbody></table>
+
+<p>Note that the use of JWT in CDS Hooks resembles the <a href="http://docs.smarthealthit.org/authorization/backend-services/">SMART on FHIR Backend Services</a> usage of JWT. However, there are differences due to the differing use cases and concerns between CDS Hooks and SMART Backend Services.</p>
+
+<p><a href="https://jwt.io/">https://jwt.io/</a> is a great resource not only for learning about JSON web tokens, but also for parsing a JWT value into its distinct parts to see how it is constructed. Try taking the example JWT here and pasting it into the form at <a href="https://jwt.io/">https://jwt.io/</a> to see how the token is constructed.</p>
+
+<aside class="notice">
+TODO: Need to propose how the EHR public key is discovered. Preference would be a further extension in the EHR FHIR server Conformance resource.
+</aside>
+
+<aside class="notice">
+TODO: Need to outline the risks of noalg signatures
+</aside>
+
+<aside class="notice">
+TODO: Need to exposing client_id and scopes in Discovery
+</aside>
+
+<h3 id="mutual-tls">Mutual TLS</h3>
+
+<p><a href="https://en.wikipedia.org/wiki/Mutual_authentication">Mutual TLS</a> (mTLS) can be used between an EHR and CDS Service and that would allow the CDS Service to establish trust of the EHR. However, if mTLS is used, this should be in addition to using JSON web tokens to establish trust of the EHR. As mTLS is not well supported across all platforms and technologies, it is not the standard means of establishing trust with the EHR.</p>
+
+<h2 id="fhir-resource-access">FHIR Resource Access</h2>
+
+<p>The CDS Service is able to use the FHIR server of the EHR to obtain any additional data it needs in order to perform its decision support. This is similar to SMART on FHIR where the SMART app can obtain additional data via the provided FHIR server.</p>
+
+<p>Like SMART on FHIR, CDS Hooks requires that access to the FHIR server be controlled by an Authorization server utilizing the OAuth 2 framework. Thus, the CDS Service is able to consume the given FHIR server via an access (bearer) token just like a SMART app. While CDS Hooks shares the underlying technical framework and standards as SMART on FHIR, there are very important differences between SMART and CDS Hooks.</p>
+
+<h3 id="obtaining-an-access-token">Obtaining an Access Token</h3>
+
+<p>In SMART on FHIR, the SMART app requests and ultimately obtains an access token from the Authorization server using the SMART launch workflow. This process utilizes the authorization code grant model as defined by the OAuth 2.0 Authorization Framework in <a href="https://tools.ietf.org/html/rfc6749">rfc6749</a>.</p>
+
+<p>With CDS Hooks, the EHR provides the access token directly in the request to the CDS Service. Thus, the CDS Service does not need to request the token from the authorization server as a SMART app would. This is done purely for performance reasons as the authorization code grant model in OAuth 2 involves several HTTPS calls and redirects. In contrast with a SMART app, a CDS Service may be invoked many times during a workflow. Going through the authorization code grant model on every hook invocation would likely result in a slow performing CDS Service due to the authorization overhead.</p>
+<pre class="highlight json"><code><span class="p">{</span><span class="w">
+  </span><span class="nt">"fhirAuthorization"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"access_token"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="s2">"some-opaque-fhir-access-token"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"token_type"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="s2">"code"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"expires_in"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="mi">300</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"scope"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="s2">"patient/Patient.read patient/Observation.read"</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+
+<h3 id="access-token">Access Token</h3>
+
+<p>The access token is specified in the CDS Service request via the <code class="prettyprint">fhirAuthorization</code> request parameter. This parameter is an object that contains both the access token as well as other related information.</p>
+
+<table><thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><code class="prettyprint">access_token</code></td>
+<td><em>string</em>. This is the OAuth 2 access token that provides access to the FHIR server.</td>
+</tr>
+<tr>
+<td><code class="prettyprint">token_type</code></td>
+<td><em>string</em>. Always the value <code class="prettyprint">code</code></td>
+</tr>
+<tr>
+<td><code class="prettyprint">expires_in</code></td>
+<td><em>integer</em>. The lifetime in seconds of the access token.</td>
+</tr>
+<tr>
+<td><code class="prettyprint">scope</code></td>
+<td><em>string</em>. The scopes the access token grants the CDS Service.</td>
+</tr>
+</tbody></table>
+
+<p>It is recommended that the <code class="prettyprint">expires_in</code> value be very short lived as the access token should be treated as a transient value by the CDS Service.</p>
+
+<p>It is recommended that the <code class="prettyprint">scope</code> value contain just the scopes that the CDS Service needs for its logic and no more.</p>
+
+<p>As the CDS Service is executing on behalf of a user, it is important that the data the CDS Service has access to is under the same restrictions/authorization as the current user. As such, the access token should be scoped to:</p>
+
+<ul>
+<li>The CDS Service being invoked</li>
+<li>The current user</li>
+<li>The current patient</li>
+</ul>
+
+<h3 id="frequently-asked-questions">Frequently Asked Questions</h3>
+
+<ol>
+<li>How is the user (clinician) prompted to authorize the CDS Service to obtain an access token on behalf of the user? If we&rsquo;re aligning with how security works for SMART apps, this is what happens today.</li>
+</ol>
+
+<p>Not quite. There is actually no requirement that there be any user interaction to authorize a SMART app to obtain an access token. More generally, the OAuth 2 framework does not prescribe <em>how</em> authorization is determined. That is, authorization may be determined via some user interruptive decision, some pre-existing business rules, or even by random chance! The authorization server is free to determine how it grants access to the resources it protects.</p>
+
+<p>With SMART on FHIR, we have seen real production behavior in which the authorization server:</p>
+
+<ul>
+<li>Grants access to practictioner facing SMART apps via some predefined business arrangement that was done out of bounds. The user (practitioner) never is asked to authorize the SMART app as their organization (hospital) has already made this decision for them.</li>
+<li>Grants access to patient facing SMART apps by asking the user explicitly for permission to both launch the SMART app as well as what specific scopes (data permissions) the SMART app may havel</li>
+</ul>
+
+<ol>
+<li>The FHIR access token model places quite a bit of work on the EHRs. Why?</li>
+</ol>
+
+<p>Yes, requiring the EHRs to obtain and share the access token with each CDS Service on each hook invocation isn&rsquo;t trivial work. However, the need to control the performance of the CDS Service invocations necessitates a different approach than SMART on FHIR. By putting the burden on the EHRs to obtain this access token, it is left to the EHR to manage this cost appropriately. Given the authorization server and EHR are controlled by the same organization, it is assumed the EHR is in a much better position to implement strategies to both obtain and manage access tokens in a performant manner in a model like CDS Hooks.</p>
+
+<p>Unlike SMART apps, CDS Services should treat access tokens as transient tokens used during the course of a single evaluation of decision support. If the EHRs did not bear the responsibility of obtaining the access token on behalf of the CDS Service, each CDS Service would need to not only obtain the token themselves, but also determine a performant manner to optimize token (re)use when their service is invoked for the same user/patient.</p>
 
 <h2 id="cross-origin-resource-sharing">Cross-Origin Resource Sharing</h2>
 
@@ -902,14 +1090,14 @@ feedback about this patient.</p>
 
 <h2 id="cdc-guideline-for-prescribing-opioids-for-chronic-pain">CDC Guideline for Prescribing Opioids for Chronic Pain</h2>
 
-<p>This example illustrates the use of the CDS Hooks <code class="prettyprint">medication-prescribe</code> hook to implement Recommendation #5 from the <a href="https://guidelines.gov/summaries/summary/50153/cdc-guideline-for-prescribing-opioids-for-chronic-pain---united-states-2016#420">CDC guideline for prescribing opioids for chronic pain</a>.</p>
-
-<p>This example is taken from the <a href="http://build.fhir.org/ig/cqframework/opioid-cds/">Opioid Prescribing Support Implementation Guide</a>, developed in partnership with the Centers for Disease Control and Prevention <a href="https://www.cdc.gov/">(CDC)</a>.</p>
+<blockquote>
+<p>CDS Service Request</p>
 
 <p>The example illustrates a prescription for Acetaminophen/Hydrocodone Bitartrate for a patient that already has a prescription for Oxycodone Hydrochloride:</p>
+</blockquote>
 <pre class="highlight json"><code><span class="p">{</span><span class="w">
   </span><span class="nt">"hookInstance"</span><span class="p">:</span><span class="w"> </span><span class="s2">"d1577c69-dfbe-44ad-ba6d-3e05e953b2ea"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"fhirServer"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http://fhirtest.uhn.ca/baseDstu2"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"fhirServer"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http://fhir.example.com"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"hook"</span><span class="p">:</span><span class="w"> </span><span class="s2">"medication-prescribe"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"user"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Practitioner/example"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"context"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
@@ -952,7 +1140,7 @@ feedback about this patient.</p>
       </span><span class="p">]</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">],</span><span class="w">
-  </span><span class="nt">"patient"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Patient/Patient-12214"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"patient"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Patient/example"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"prefetch"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="nt">"medication"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="nt">"response"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
@@ -964,7 +1152,7 @@ feedback about this patient.</p>
         </span><span class="nt">"dateWritten"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2017-04-25"</span><span class="p">,</span><span class="w">
         </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"active"</span><span class="p">,</span><span class="w">
         </span><span class="nt">"patient"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-          </span><span class="nt">"reference"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Patient/Patient-12214"</span><span class="w">
+          </span><span class="nt">"reference"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Patient/example"</span><span class="w">
         </span><span class="p">},</span><span class="w">
         </span><span class="nt">"medicationCodeableConcept"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
           </span><span class="nt">"coding"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
@@ -1000,7 +1188,15 @@ feedback about this patient.</p>
 </span><span class="p">}</span><span class="w">
 </span></code></pre>
 
-<p>This request results in the following response:</p>
+<p>This example illustrates the use of the CDS Hooks <code class="prettyprint">medication-prescribe</code> hook to implement Recommendation #5 from the <a href="https://guidelines.gov/summaries/summary/50153/cdc-guideline-for-prescribing-opioids-for-chronic-pain---united-states-2016#420">CDC guideline for prescribing opioids for chronic pain</a>.</p>
+
+<p>This example is taken from the <a href="http://build.fhir.org/ig/cqframework/opioid-cds/">Opioid Prescribing Support Implementation Guide</a>, developed in partnership with the Centers for Disease Control and Prevention <a href="https://www.cdc.gov/">(CDC)</a>.</p>
+
+<blockquote>
+<p>CDS Service Response</p>
+
+<p>The opioid guideline request results in the following response that indicates the patient is at high risk for opioid overdose according to the CDC guidelines, and the dosage should be tapered to less than 50 MME. Links are provided to the guideline, as well as to the MME conversion tables provided by CDC.</p>
+</blockquote>
 <pre class="highlight json"><code><span class="p">{</span><span class="w">
   </span><span class="nt">"summary"</span><span class="p">:</span><span class="w"> </span><span class="s2">"High risk for opioid overdose - taper now"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"indicator"</span><span class="p">:</span><span class="w"> </span><span class="s2">"warning"</span><span class="p">,</span><span class="w">
@@ -1017,17 +1213,20 @@ feedback about this patient.</p>
     </span><span class="p">}</span><span class="w">
   </span><span class="p">],</span><span class="w">
   </span><span class="nt">"detail"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Total morphine milligram equivalent (MME) is 125mg. Taper to less than 50."</span><span class="w">
-</span><span class="p">}</span><span class="err">```</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
 
-</span><span class="err">##</span><span class="w"> </span><span class="err">Radiology</span><span class="w"> </span><span class="err">Appropriateness</span><span class="w">
+<h2 id="radiology-appropriateness">Radiology Appropriateness</h2>
 
-</span><span class="err">This</span><span class="w"> </span><span class="err">example</span><span class="w"> </span><span class="err">illustrates</span><span class="w"> </span><span class="err">the</span><span class="w"> </span><span class="err">use</span><span class="w"> </span><span class="err">of</span><span class="w"> </span><span class="err">the</span><span class="w"> </span><span class="err">CDS</span><span class="w"> </span><span class="err">Hooks</span><span class="w"> </span><span class="err">`order-review`</span><span class="w"> </span><span class="err">hook</span><span class="w"> </span><span class="err">to</span><span class="w"> </span><span class="err">implement</span><span class="w"> </span><span class="err">Radiology</span><span class="w"> </span><span class="err">Appropriateness</span><span class="w"> </span><span class="err">scoring.</span><span class="w">
+<blockquote>
+<p>CDS Service Request</p>
 
-</span><span class="err">```json</span><span class="w">
-</span><span class="p">{</span><span class="w">
+<p>This example illustrates the use of the CDS Hooks <code class="prettyprint">order-review</code> hook to implement Radiology Appropriateness scoring.</p>
+</blockquote>
+<pre class="highlight json"><code><span class="p">{</span><span class="w">
   </span><span class="nt">"hookInstance"</span><span class="p">:</span><span class="w"> </span><span class="s2">"d1577c69-dfbe-44ad-ba6d-3e05e953b2ea"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"fhirServer"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http://fhirtest.uhn.ca/baseDstu2"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"hook"</span><span class="p">:</span><span class="w"> </span><span class="s2">"medication-prescribe"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"fhirServer"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http://fhir.example.com"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"hook"</span><span class="p">:</span><span class="w"> </span><span class="s2">"order-review"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"user"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Practitioner/example"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"context"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
     </span><span class="p">{</span><span class="w">
@@ -1036,12 +1235,13 @@ feedback about this patient.</p>
       </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"draft"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"intent"</span><span class="p">:</span><span class="w"> </span><span class="s2">"proposal"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"priority"</span><span class="p">:</span><span class="w"> </span><span class="s2">"routine"</span><span class="p">,</span><span class="w">
-      </span><span class="nt">"code"</span><span class="p">:</span><span class="w">
-        </span><span class="s2">"coding"</span><span class="err">:</span><span class="w"> </span><span class="p">[{</span><span class="w">
+      </span><span class="nt">"code"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nt">"coding"</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="w">
           </span><span class="nt">"system"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http://www.ama-assn.org/go/cpt"</span><span class="p">,</span><span class="w">
           </span><span class="nt">"code"</span><span class="p">:</span><span class="w"> </span><span class="s2">"70450"</span><span class="p">,</span><span class="w">
           </span><span class="nt">"display"</span><span class="p">:</span><span class="w"> </span><span class="s2">"CT, head, wo iv contrast"</span><span class="w">
-        </span><span class="p">}],</span><span class="w">
+        </span><span class="p">}]</span><span class="w">
+      </span><span class="p">},</span><span class="w">
       </span><span class="nt">"subject"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="nt">"reference"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Patient/example"</span><span class="w">
       </span><span class="p">},</span><span class="w">
@@ -1056,7 +1256,11 @@ feedback about this patient.</p>
 </span><span class="p">}</span><span class="w">
 </span></code></pre>
 
-<p>The appropriateness score is communicated via an update of the procedure request:</p>
+<blockquote>
+<p>CDS Service Response</p>
+
+<p>The appropriateness score is communicated via an update of the procedure request that adds an extension element to indicate the appropriateness rating.</p>
+</blockquote>
 <pre class="highlight json"><code><span class="p">{</span><span class="w">
   </span><span class="nt">"cards"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
     </span><span class="p">{</span><span class="w">
@@ -1066,10 +1270,10 @@ feedback about this patient.</p>
       </span><span class="nt">"suggestions"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
         </span><span class="p">{</span><span class="w">
           </span><span class="nt">"label"</span><span class="p">:</span><span class="w"> </span><span class="s2">"The appropriateness score for this procedure given these indications is 9, usually appropriate."</span><span class="p">,</span><span class="w">
-          </span><span class="nt">"actions"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
-            </span><span class="s2">"type"</span><span class="err">:</span><span class="w"> </span><span class="s2">"update"</span><span class="p">,</span><span class="w">
-            </span><span class="s2">"description"</span><span class="err">:</span><span class="w"> </span><span class="s2">"Update the order to record the appropriateness score."</span><span class="p">,</span><span class="w">
-            </span><span class="s2">"resource"</span><span class="err">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="nt">"actions"</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="w">
+            </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"update"</span><span class="p">,</span><span class="w">
+            </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Update the order to record the appropriateness score."</span><span class="p">,</span><span class="w">
+            </span><span class="nt">"resource"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
               </span><span class="nt">"resourceType"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ProcedureRequest"</span><span class="p">,</span><span class="w">
               </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"procedure-request-1"</span><span class="p">,</span><span class="w">
               </span><span class="nt">"extension"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
@@ -1081,12 +1285,13 @@ feedback about this patient.</p>
               </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"draft"</span><span class="p">,</span><span class="w">
               </span><span class="nt">"intent"</span><span class="p">:</span><span class="w"> </span><span class="s2">"proposal"</span><span class="p">,</span><span class="w">
               </span><span class="nt">"priority"</span><span class="p">:</span><span class="w"> </span><span class="s2">"routine"</span><span class="p">,</span><span class="w">
-              </span><span class="nt">"code"</span><span class="p">:</span><span class="w">
-                </span><span class="s2">"coding"</span><span class="err">:</span><span class="w"> </span><span class="p">[{</span><span class="w">
+              </span><span class="nt">"code"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+                </span><span class="nt">"coding"</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="w">
                   </span><span class="nt">"system"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http://www.ama-assn.org/go/cpt"</span><span class="p">,</span><span class="w">
                   </span><span class="nt">"code"</span><span class="p">:</span><span class="w"> </span><span class="s2">"70450"</span><span class="p">,</span><span class="w">
                   </span><span class="nt">"display"</span><span class="p">:</span><span class="w"> </span><span class="s2">"CT, head, wo iv contrast"</span><span class="w">
-                </span><span class="p">}],</span><span class="w">
+                </span><span class="p">}]</span><span class="w">
+              </span><span class="p">},</span><span class="w">
               </span><span class="nt">"subject"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
                 </span><span class="nt">"reference"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Patient/example"</span><span class="w">
               </span><span class="p">},</span><span class="w">
@@ -1096,7 +1301,7 @@ feedback about this patient.</p>
                 </span><span class="p">}</span><span class="w">
               </span><span class="p">}</span><span class="w">
             </span><span class="p">}</span><span class="w">
-          </span><span class="p">]</span><span class="w">
+          </span><span class="p">}]</span><span class="w">
         </span><span class="p">}</span><span class="w">
       </span><span class="p">]</span><span class="w">
     </span><span class="p">}</span><span class="w">
